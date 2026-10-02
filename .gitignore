@@ -52,3 +52,15 @@ drafts/
 *.key
 *credentials*
 cloud-config.local.js
+
+# ── 截图渲染的产物（由 docs/render_readme.py 生成）──
+docs/readme-render.html
+
+# ── 技能包构建产物 ──
+dist/
+
+# ── 截图渲染的产物（由 docs/render_readme.py 生成）──
+docs/readme-render.html
+
+# ── 技能包构建产物 ──
+dist/
