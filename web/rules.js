@@ -261,7 +261,12 @@ window.QUESTION_DOCTOR_RULES = {
             "我在做",
             "起因",
             "当时",
-            "问题是"
+            "问题是",
+            "有没有过",
+            "遇到过",
+            "经历过",
+            "经常会",
+            "这种情况"
           ]
         },
         {
@@ -321,7 +326,7 @@ window.QUESTION_DOCTOR_RULES = {
         {
           "id": "可复用形式",
           "weight": 18,
-          "note": "能不能被复制走：有没有可直接粘贴的代码/prompt/命令",
+          "note": "能不能被复制走：可直接粘贴的代码 / prompt / 命令，或者一个能被打开的链接",
           "patterns": [
             "```",
             "prompt",
@@ -332,7 +337,8 @@ window.QUESTION_DOCTOR_RULES = {
             "npm ",
             "pip ",
             "python ",
-            "git "
+            "git ",
+            "https?://"
           ]
         }
       ]
