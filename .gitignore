@@ -1,0 +1,54 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+venv/
+.venv/
+env/
+ENV/
+
+# ── 测试与覆盖率 ──
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+
+# ── 编辑器 / IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── 操作系统 ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── 本地草稿（会被工具直接读到，但不属于项目） ──
+draft.md
+drafts/
+*.local.md
+*.my.md
+
+# ── 部署 / 平台产生的本地产物 ──
+.wbapp_*
+*.genie
+.vercel/
+.netlify/
+
+# ── 密钥（绝不允许提交） ──
+.env
+.env.*
+*.key
+*credentials*
+cloud-config.local.js
