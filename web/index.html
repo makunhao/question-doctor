@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>提问医生 · 发到群里之前，先做个体检</title>
+<meta name="description" content="粘贴一段你准备发到群里的提问，立刻拿到要素完备度评分、缺口清单、媒介适配检查和改写建议。离线规则引擎 + AI 语义增强。">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩺</text></svg>">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">question-doctor</p>
+    <h1>发到群里之前，先给问题做个体检</h1>
+    <p class="lede">
+      粘贴一段你准备发到群里的文字，立刻拿到——
+      <strong>要素完备度评分</strong>、<strong>缺什么</strong>、<strong>这条在手机上占几屏</strong>、
+      以及<strong>怎么改</strong>。
+    </p>
+    <p class="lede sub">
+      规则引擎<b>离线可用、零依赖</b>；想更进一步，可以打开
+      <a href="#ai-panel">AI 语义增强</a>，让它诊断「脚本看不出来的那一层」并直接帮你改写。
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ───────────── 输入 ───────────── -->
+  <section class="card" id="input-card">
+    <div class="card-head">
+      <h2>① 贴上你要发的那段话</h2>
+      <div class="row-tools">
+        <button class="btn ghost" type="button" id="btn-sample-bad">载入反面例子</button>
+        <button class="btn ghost" type="button" id="btn-sample-good">载入正面例子</button>
+        <button class="btn ghost" type="button" id="btn-clear">清空</button>
+      </div>
+    </div>
+
+    <textarea id="draft" rows="9" spellcheck="false"
+      placeholder="把你准备原样发到群里的那段文字贴进来（不要转述，要原文）……&#10;&#10;例如：我的代码报错了，大佬们帮我看看"></textarea>
+
+    <div class="controls">
+      <label class="field">
+        <span>类型</span>
+        <select id="type">
+          <option value="">自动识别</option>
+          <option value="question">提问类 — 请人帮你解决一个具体问题</option>
+          <option value="share">分享类 — 把验证过的经验交给别人</option>
+          <option value="feedback">回馈类 — 把讨论沉淀成结论交回群里</option>
+        </select>
+      </label>
+
+      <label class="field inline">
+        <input type="checkbox" id="live">
+        <span>边打字边诊断</span>
+      </label>
+
+      <button class="btn primary" type="button" id="btn-run">开始诊断</button>
+    </div>
+
+    <p class="hint" id="counter"></p>
+  </section>
+
+  <!-- ───────────── 结果 ───────────── -->
+  <section class="card hidden" id="result-card">
+    <div class="card-head">
+      <h2>② 诊断结果</h2>
+      <div class="row-tools">
+        <button class="btn ghost" type="button" id="btn-copy">复制报告 (Markdown)</button>
+        <button class="btn ghost" type="button" id="btn-download">下载 .md</button>
+      </div>
+    </div>
+
+    <div class="score-row">
+      <div class="score-ring" id="ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="score-num">
+          <b id="score">0</b><span>/100</span>
+        </div>
+      </div>
+      <div class="score-meta">
+        <p class="grade" id="grade">—</p>
+        <p class="verdict" id="verdict">—</p>
+        <p class="muted" id="type-reason"></p>
+        <p class="penalty hidden" id="penalty"></p>
+      </div>
+    </div>
+
+    <h3>要素检查</h3>
+    <p class="muted small" id="gate-line"></p>
+    <div class="grid" id="elements"></div>
+
+    <div id="todo-block">
+      <h3>优先要补的</h3>
+      <ol class="todo" id="todo"></ol>
+    </div>
+
+    <h3>媒介适配（群聊）</h3>
+    <div class="medium" id="medium"></div>
+
+    <div id="neg-block" class="hidden">
+      <h3>负面信号</h3>
+      <ul class="neg" id="negatives"></ul>
+    </div>
+
+    <h3>一句话自检</h3>
+    <blockquote class="checkup">
+      我在做 <b>____</b>（目标），用的是 <b>____</b>（环境），
+      已经试过 <b>____</b>（结果 <b>____</b>），<br>
+      现在卡在 <b>____</b>，我怀疑是 <b>____</b>，想要的是 <b>____</b>（解法 / 方案对比 / 指出盲区）。
+    </blockquote>
+    <p class="hint">填不满的地方，就是对方会反问你的地方。</p>
+  </section>
+
+  <!-- ───────────── AI 增强 ───────────── -->
+  <section class="card" id="ai-panel">
+    <div class="card-head">
+      <h2>③ AI 语义增强 <span class="tag">可选</span></h2>
+    </div>
+
+    <p class="lede small">
+      上面那份报告是<b>确定性规则</b>算出来的——它能查「要素在不在」，
+      但查不出「要素写得对不对」。这一层交给 AI：
+      <b>判断你的上下文够不够、卡点是不是真的卡点、并直接把改写后的版本写给你。</b>
+    </p>
+
+    <div class="ai-status" id="ai-status">正在检测 AI 通道……</div>
+
+    <div class="ai-actions">
+      <button class="btn primary" type="button" id="btn-ai" disabled>用 AI 增强诊断</button>
+      <button class="btn ghost" type="button" id="btn-ai-stop" disabled>停止</button>
+      <span class="muted small" id="ai-usage"></span>
+    </div>
+
+    <div class="ai-out hidden" id="ai-out"></div>
+
+    <details class="fallback">
+      <summary>AI 不可用？用自己的 Key（可选）</summary>
+      <p class="muted small">
+        如果你本地跑这个项目、或者部署时没接通 AI 通道，可以填一个
+        OpenAI 兼容的接口。Key 只存在你自己浏览器的 localStorage 里，不会上传到任何地方。
+      </p>
+      <div class="controls">
+        <label class="field grow">
+          <span>Base URL</span>
+          <input type="text" id="byo-base" placeholder="https://api.openai.com/v1">
+        </label>
+        <label class="field grow">
+          <span>Model</span>
+          <input type="text" id="byo-model" placeholder="gpt-4o-mini">
+        </label>
+        <label class="field grow">
+          <span>API Key</span>
+          <input type="password" id="byo-key" placeholder="sk-...">
+        </label>
+        <button class="btn ghost" type="button" id="btn-byo-save">保存到本机</button>
+      </div>
+    </details>
+  </section>
+
+  <details class="card about">
+    <summary>这个工具凭什么这么说？</summary>
+    <div class="about-body">
+      <p>
+        它的规则不是拍脑袋定的。每一条都对应一个<b>真实的失败</b>——
+        项目源头是作者在做「群内高质量参与」挑战时写的一份自查脚本，
+        那份脚本在真实使用中被打脸了 <b>4 次</b>，每次修的都是<b>度量本身</b>：
+      </p>
+      <ol class="todo">
+        <li><b>类型感知</b>——对所有帖子套用「提问」门槛，会把分享帖误判成不合格，
+          于是作者为了过检查去补一堆没人需要的内容。<b>度量劫持了目标。</b></li>
+        <li><b>显式元数据优先</b>——一篇分享帖里只要出现「想请教群里的」，启发式就会把它认成提问帖。</li>
+        <li><b>否定词边界</b>——早期用 <code>"无" in 单元格</code> 判断「无回应」，
+          结果把「你是不是<b>没有</b>在群里发」这条<b>真实回复</b>判成了「没人回」。<b>一个子串包含毁掉一条证据。</b></li>
+        <li><b>分渠道判定</b>——扫整行找「私聊」两字，会把「群内 @我 → 转私聊闭环」误判成私聊。</li>
+      </ol>
+      <p>
+        <b>所以这个工具给自己的定位是：</b>
+        它不判断你的问题「值不值得问」，只告诉你<b>信息够不够别人开始帮你</b>。
+        分数是给你自己看的，不是门禁。
+      </p>
+      <p class="muted small">
+        规则全部写在 <code>references/rules.json</code>，改规则不需要动代码。
+        源码与完整文档见仓库 README。
+      </p>
+    </div>
+  </details>
+
+</main>
+
+<footer class="wrap foot">
+  <p>
+    question-doctor · MIT License ·
+    <span class="muted">离线规则引擎 + 可选 AI 语义增强 · 不收集任何输入内容</span>
+  </p>
+</footer>
+
+<script src="rules.js"></script>
+<script src="engine.js"></script>
+<script src="cloud-config.js" onerror="window.__CLOUD_CONFIG__=null"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"
+        onerror="window.__CLOUD_SDK_FAILED__=true"></script>
+<script src="app.js"></script>
+</body>
+</html>
