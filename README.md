@@ -41,7 +41,7 @@
 **零依赖**，不需要 `pip install` 任何东西。只需要 Python ≥ 3.9。
 
 ```bash
-git clone https://github.com/<your-name>/question-doctor.git
+git clone https://github.com/makunhao/question-doctor.git
 cd question-doctor
 ```
 
@@ -237,5 +237,5 @@ python -m unittest discover -s tests
 | 2026-10-02 | 作者自己在发群消息前自检 | 已用于本项目自身的 0 分 / 100 分两个示例 |
 | （待补充） | | |
 
-**用过了？欢迎在 [Issues](https://github.com/<your-name>/question-doctor/issues) 里留一条**，
+**用过了？欢迎在 [Issues](https://github.com/makunhao/question-doctor/issues) 里留一条**，
 哪怕是「我觉得这个判定不对」——那是最有价值的反馈。

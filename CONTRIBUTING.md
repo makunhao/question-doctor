@@ -56,7 +56,7 @@ python -m unittest discover -s tests         # 24 个测试
 请不要为了便利引入第一个第三方库（除非有非常强的理由，且请在 Issue 里先讨论）。
 
 ```bash
-git clone https://github.com/<your-name>/question-doctor.git
+git clone https://github.com/makunhao/question-doctor.git
 cd question-doctor
 python -m unittest discover -s tests -v
 ```
