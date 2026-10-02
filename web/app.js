@@ -133,6 +133,30 @@
     $('result-card').classList.remove('hidden');
   }
 
+  /**
+   * 生成一段可以直接粘到群里的分享文案。
+   *
+   * 设计约束（三条，都是为了不变成垃圾消息）：
+   *   1. **只带分数，绝不带草稿原文** —— 用户贴进来的可能是私事，
+   *      分享文案里出现原文就等于替他泄露了。
+   *   2. **链接用 location.href 现算**，不硬编码 —— 别人 fork 到自己域名部署时，
+   *      分享出去的链接也得是对的。
+   *   3. **对读到的人有用**，才允许发 —— 所以文案里先讲清"这工具是干什么的"，
+   *      分数只是钩子。一条对群里没价值的消息，发出去只会消耗你的信用。
+   */
+  function shareText(r) {
+    const lacks = r.missing.length ? r.missing.slice(0, 2).join('」和「') : '';
+    const scoreLine = lacks
+      ? `我用「提问医生」把刚写的问题过了一遍：${Math.round(r.score)}/100，缺「${lacks}」。`
+      : `我用「提问医生」把刚写的问题过了一遍：${Math.round(r.score)}/100，要素齐了。`;
+    return [
+      scoreLine,
+      '发到群里之前跑一遍，能少一轮来回——它只查"信息够不够别人开始帮你"，不评你问得好不好。',
+      '免登录、打开就能用（核心功能不联网）：',
+      location.origin + location.pathname,
+    ].join('\n');
+  }
+
   /* ══════════════════════════════════════════════════════════
      Layer 1 · Markdown 报告导出（同样走 engine.js，保证与 CLI 输出一致）
      ══════════════════════════════════════════════════════════ */
@@ -486,6 +510,19 @@ def handle_endtag(tag):
         setTimeout(() => ($('btn-copy').textContent = '复制报告 (Markdown)'), 1600);
       } catch {
         alert('复制失败，请手动选中。报告内容：\n\n' + md.slice(0, 400));
+      }
+    });
+
+    $('btn-share').addEventListener('click', async () => {
+      if (!lastResult) return;
+      const text = shareText(lastResult);
+      const btn = $('btn-share');
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '已复制 ✓';
+        setTimeout(() => (btn.textContent = '复制分享文案'), 1600);
+      } catch {
+        alert('复制失败，请手动复制：\n\n' + text);
       }
     });
 
