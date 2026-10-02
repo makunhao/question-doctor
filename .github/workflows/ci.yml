@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 对拍测试需要 node；本项目本身零依赖，这里装 node 只为跑 JS 引擎
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 规则权重校验（合计必须为 100）
+        run: python scripts/build_web_rules.py --check
+
+      - name: 同步网页版规则并确认无漂移
+        run: |
+          python scripts/build_web_rules.py
+          git diff --exit-code web/rules.js \
+            || (echo "::error::web/rules.js 与 references/rules.json 不一致，请跑 python scripts/build_web_rules.py" && exit 1)
+
+      - name: 运行全部测试（含跨语言对拍）
+        run: python -m unittest discover -s tests -v
+
+      - name: 冒烟测试 —— 反面例子必须失败
+        run: |
+          if python scripts/question_doctor.py --quiet examples/01-bad-question.md; then
+            echo "::error::反面例子竟然通过了，判定逻辑坏了"; exit 1
+          else
+            echo "OK：反面例子被正确判为不通过"
+          fi
+
+      - name: 冒烟测试 —— 正面例子必须通过
+        run: python scripts/question_doctor.py --quiet examples/02-good-question.md
+
+      - name: JSON 输出结构校验
+        run: |
+          python scripts/question_doctor.py --json examples/02-good-question.md > /tmp/out.json
+          python - <<'PY'
+          import json
+          d = json.load(open('/tmp/out.json', encoding='utf-8'))
+          assert d['tool'] == 'question-doctor', d
+          assert isinstance(d['score'], (int, float)), d
+          assert d['passed'] is True, d
+          print('JSON 输出结构正常，score =', d['score'])
+          PY

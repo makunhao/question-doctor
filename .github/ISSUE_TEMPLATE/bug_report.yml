@@ -1,0 +1,52 @@
+name: 判定不对 / 误报
+description: 本工具对你的草稿做出了你认为不正确的判定 —— 最高价值的反馈类型
+title: "[误报] "
+labels: ["bug", "rules"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。**这类 Issue 是本项目最有价值的输入**——本工具的全部判据都来自真实踩坑，
+        你的场景我没踩过，所以我一定漏了。
+
+        ⚠️ 提之前请先删掉原文里的**个人信息**（人名、群名、公司名、本地路径、账号）。
+  - type: textarea
+    id: draft
+    attributes:
+      label: 被诊断的原文
+      description: 请贴**原文**，不要转述。没有原文这边无法复现。
+      placeholder: 把你当时贴进去的那段文字原样贴在这里
+    validations:
+      required: true
+  - type: input
+    id: score
+    attributes:
+      label: 工具给出的分数与判定
+      placeholder: "例：62/100 (C 级)，『具体卡点』被判为 ❌ 缺失"
+    validations:
+      required: true
+  - type: dropdown
+    id: channel
+    attributes:
+      label: 你用的是哪个入口
+      options:
+        - 命令行（question_doctor.py）
+        - 网页版
+        - 作为 Skill 调用
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 为什么你认为判定不对
+      description: 说清"哪一句已经包含了被判缺失的那个要素"，以及当时的具体语境
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: 命令行跑 `python scripts/question_doctor.py --version`，或用网页版的日期
+      placeholder: "2.0.0"
+    validations:
+      required: false

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 我用了这个工具，想留个反馈
+    url: https://github.com/<your-name>/question-doctor/discussions
+    about: 用得好、用得不好、或者只是因为用了它而拿到了一次回复 —— 都欢迎。C4 的评判标准里，「被多少人真的用过」比「写得多漂亮」更重要。
+  - name: 我想先看看它是怎么判断的
+    url: https://github.com/<your-name>/question-doctor/blob/main/ATTRIBUTION.md
+    about: 全部判据来源与借鉴清单（含 4 条来自真实踩坑的元规则）

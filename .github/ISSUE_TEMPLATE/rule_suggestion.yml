@@ -1,0 +1,48 @@
+name: 补充关键词 / 规则
+description: 某个说法在你的行业或场景里很常见，但规则表里没有
+title: "[规则] "
+labels: ["rules", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **改规则不需要写代码**——所有判据都在 `references/rules.json`。
+        你也可以直接提 PR 改那个文件（记得跑 `python scripts/build_web_rules.py`）。
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 要改什么
+      options:
+        - 给某个要素补关键词（patterns）
+        - 给「已尝试」补结果词（confirm）
+        - 新增一类负面信号
+        - 调整权重
+        - 新增一种文本类型
+    validations:
+      required: true
+  - type: input
+    id: element
+    attributes:
+      label: 涉及哪个要素 / 类型
+      placeholder: "例：要素『具体卡点』 / 类型『提问类』"
+    validations:
+      required: true
+  - type: textarea
+    id: phrase
+    attributes:
+      label: 要补的说法
+      description: 一行一个，最好附一句"这句话在什么场景下等于这个要素"
+    validations:
+      required: true
+  - type: textarea
+    id: counterexample
+    attributes:
+      label: 顺带想想：反例是什么？
+      description: |
+        这是本项目最在意的一栏。补关键词最容易造成的伤害是**误报**——
+        一个词在大面积文本里"总是出现"，于是所有文本都自动过关。
+        早期就吃过这个亏：用 `"无" in cell` 判断"无回应"，
+        把「你是不是**没有**在群里发」这条真实回复判成了"没人回"。
+      placeholder: "例：补『没有』会让所有含『没有』的正常句子都命中，所以不能补这个词"
+    validations:
+      required: false
