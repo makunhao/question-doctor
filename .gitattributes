@@ -1,0 +1,28 @@
+# .gitattributes
+#
+# 两个用途：
+#   1. 把**生成物**从 GitHub 的语言统计里排除
+#   2. 统一换行符，避免 Windows 上被自动改成 CRLF 导致全量 diff
+
+# ── 生成物 ──
+# web/rules.js 由 references/rules.json 生成（scripts/build_web_rules.py）。
+# 它 498 行、是仓库里单文件行数最多的 JS，会把语言统计从 Python 带成 JavaScript——
+# 而它根本不是手写的代码，是数据。
+web/rules.js  linguist-generated=true  -diff  merge=binary
+
+# ── 换行符统一为 LF ──
+# 这个项目在 Windows 上开发，git 默认会把 LF 换成 CRLF，
+# 结果每个文件都显示"全部变更"。显式声明 eol=lf 可以避免。
+*.py    text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.sh    text eol=lf
+
+# ── 二进制 ──
+*.png   binary
+*.jpg   binary
+*.skill binary
