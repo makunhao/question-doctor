@@ -1,0 +1,18 @@
+{
+  "recorded_at": "2026-10-03",
+  "note": "本文件记录当前准确率水平。CI 只对『比基线更差』报红——已知缺口不报红，新回归必须报红。",
+  "summary": {
+    "cases": 18,
+    "element_cells": 120,
+    "false_positive": 5,
+    "false_negative": 2,
+    "fp_rate": 4.17,
+    "fn_rate": 1.67,
+    "type_accuracy": 100.0,
+    "pass_accuracy": 94.4,
+    "medium_accuracy": 100.0,
+    "negative_errors": 0,
+    "known_gaps": 8,
+    "new_failures": 0
+  }
+}

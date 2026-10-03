@@ -118,12 +118,19 @@
     const hardMissing = spec.hard_gates.filter((g) => missing.includes(g));
     const grade = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : 'D';
 
+    const medium = checkMedium(text, rules);
+    // 「要素维度通过」与「现在就能发出去」是两件事，必须分开表达：
+    // 八要素齐全但占 4 屏的稿子，要素满分，可群里大概率没人读完。
+    // 只给一个布尔值，用户会看到「可以发」然后把 4 屏发出去。
+    const passed = hardMissing.length === 0 && score >= 70;
+
     return { type: det.type, typeLabel: spec.label, typeReason: det.why,
              elements, missing, partial, hardGates: spec.hard_gates, hardMissing,
              hardOk: hardMissing.length === 0, negatives, penalty,
              score: Math.round(score * 10) / 10, raw, grade,
-             medium: checkMedium(text, rules),
-             passed: hardMissing.length === 0 && score >= 70 };
+             medium,
+             passed,
+             readyToSend: passed && medium.level !== 'bad' };
   }
 
   function toMarkdown(r, draft, rules) {
@@ -167,7 +174,17 @@
     L.push('', '## 五、一句话自检', '');
     L.push('> 我在做 ____（目标），用的是 ____（环境），已经试过 ____（结果 ____），');
     L.push('> 现在卡在 ____，我怀疑是 ____，想要的是 ____（解法/方案对比/指出盲区）。');
-    L.push('', '---', '', `**结论：${r.passed ? '✅ 可以发' : '⚠️ 建议先改一轮再发'}**`);
+    // 结论要分开讲：要素过关 ≠ 现在就该按原样发出去
+    let verdict;
+    if (r.readyToSend) {
+      verdict = '✅ 可以发';
+    } else if (r.passed && m.level === 'bad') {
+      verdict = `⚠️ **要素过关，但先别按原样发**——这条 ${m.chars} 字 ≈ ${m.screens} 屏，` +
+                '群里大概率没人读完。先把「已尝试/已排除」压成几行、代码挪到附件，再发。';
+    } else {
+      verdict = '⚠️ 建议先改一轮再发';
+    }
+    L.push('', '---', '', `**结论：${verdict}**`);
     L.push('', '<details><summary>被诊断的原文</summary>', '', '```', draft, '```', '', '</details>');
     return L.join('\n');
   }

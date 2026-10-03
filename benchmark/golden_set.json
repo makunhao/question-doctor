@@ -1,0 +1,307 @@
+{
+  "schema_version": "1.0",
+  "frozen_at": "2026-10-03",
+  "purpose": "黄金测试集：用人工标注的期望值，量化引擎的『误报率 / 漏报率 / 类型判定准确率 / 硬门槛判定一致率』。",
+  "labeling_protocol": [
+    "【先标注、后运行】每条用例的期望值只依据**文本本身**人工判定，不看引擎输出——否则就是循环论证。",
+    "expect_present 列出该用例在其 expect_type 下**应当被判为存在**的要素；该类型其余要素一律视为应当缺失。",
+    "expect_type 为 null 表示该用例的类型本身就有歧义，**不参与类型准确率统计**（宁可不统计，也不硬凑一个标签）。",
+    "expect_partial 表示『有该要素但表达不完整』（例如说了试过什么、但没说结果）。",
+    "expect_medium_level 只在媒介适配结论明确时填写。"
+  ],
+  "metric_directions": {
+    "误报(false_positive)": "引擎判『缺失』，但标注是『存在』 → 冤枉用户，会让好稿子被改坏",
+    "漏报(false_negative)": "引擎判『存在』，但标注是『缺失』 → 放过问题，用户以为万事大吉",
+    "说明": "两个方向的伤害不对称：误报会诱导用户为了凑要素而做无用功（度量劫持目标），所以它被单独列出来看。"
+  },
+  "cases": [
+    {
+      "id": "G01",
+      "title": "典型甩手式求助",
+      "input": "我的代码报错了，大佬们帮我看看",
+      "expect_type": "question",
+      "expect_present": [],
+      "expect_negative": [
+        "甩手式求助"
+      ],
+      "expect_pass": false,
+      "rationale": "『帮我看看』落在『明确诉求』的词表里，但它其实是甩手——对方连『看什么』都不知道。这条用来暴露该误报。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G02",
+      "title": "极短无信息求助",
+      "input": "报错了",
+      "expect_type": "question",
+      "expect_present": [],
+      "expect_negative": [
+        "无信息求助"
+      ],
+      "expect_pass": false,
+      "rationale": "最短的求助形态。除负面信号外，八项应当全缺。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G03",
+      "title": "灌水回复",
+      "input": "+1",
+      "expect_type": null,
+      "expect_present": [],
+      "expect_negative": [
+        "灌水"
+      ],
+      "expect_pass": false,
+      "rationale": "红线相关：纯灌水。类型本身无意义，故不参与类型统计。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G04",
+      "title": "纯表情",
+      "input": "🙂🙂🙂",
+      "expect_type": null,
+      "expect_present": [],
+      "expect_negative": [
+        "纯表情"
+      ],
+      "expect_pass": false,
+      "rationale": "红线相关：纯表情凑数。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G05",
+      "title": "无效开场",
+      "input": "在吗",
+      "expect_type": null,
+      "expect_present": [],
+      "expect_negative": [
+        "无效开场"
+      ],
+      "expect_pass": false,
+      "rationale": "占用一次交互却不携带任何信息。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G06",
+      "title": "完整的好提问（八要素齐全）",
+      "input": "【背景】Windows 11 / Python 3.13，我在做课程资料抓取，目标是把 31 个课程页面转成 Markdown。\n\n【现象】第一版跑完，31 篇里 13 篇正常，**18 篇输出 0 字符**。用浏览器打开这 18 篇，正文明明在。\n\n【已尝试】怀疑编码 → 确认解码 UTF-8 无异常，已排除；怀疑选择器 → 手工 grep 了其中一个页面，article 标签确实存在，已排除；打印 drop_depth 后发现真正原因：它一旦涨上去就再也没回到 0。\n\n【卡点】真实网页有大量不闭合标签，html.parser 是流式回调、不做配对修复；我的 drop_depth 是全局计数器，只要有个 div 欠一个闭合，这个 +1 就永远抵消不掉。\n\n【最小复现】\n```python\nif tag in DROP_TAGS: drop_depth += 1\n```\n\n【我的候选改法】把深度计数器换成显式标签栈。\n\n【想请教】这个栈方案在嵌套同名标签的场景下，有没有更稳的判据？",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "已尝试",
+        "已排除",
+        "具体卡点",
+        "证据/数字",
+        "最小复现",
+        "明确诉求",
+        "候选答案"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "八项全齐的基准线。若这条拿不到满分，说明规则把好稿子误伤了。",
+      "expect_ready_to_send": true
+    },
+    {
+      "id": "G07",
+      "title": "半好提问：缺『已尝试』",
+      "input": "【背景】Windows 11，我在做一个课程资料抓取脚本，目标是把 20 个页面转成 Markdown。\n现在卡在编码这一步，跑出来的中文全是乱码。\n想请教一下有没有更稳的处理方式。",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "具体卡点",
+        "明确诉求"
+      ],
+      "expect_negative": [],
+      "expect_pass": false,
+      "rationale": "硬门槛缺『已尝试』→ 应当判不通过。这是最常见的一类半成品提问。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G08",
+      "title": "说了试过什么，但没说结果",
+      "input": "背景：我在用 Python 3.13 处理一批 HTML，目标是提取正文。\n我试过换编码，也试过改选择器。\n现在卡在提取结果为空。\n我目前的改法是改用标签栈。",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "具体卡点",
+        "候选答案"
+      ],
+      "expect_partial": [
+        "已尝试"
+      ],
+      "expect_negative": [],
+      "expect_pass": false,
+      "rationale": "『已尝试』应当只给一半分：读的人还是不知道该排除哪条路。另外『Python 3.13』『结果为空』都不构成证据/数字。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G09",
+      "title": "回归反例：真实内容里含『没有 / 不行 / 一样』",
+      "input": "背景：我在做课程项目，用 Windows 11 和 Python 3.13，目标是把讲义转成 Markdown。\n现象：跑了三次，13/31 篇正常，18 篇输出 0 字符。\n已尝试：试过换编码 → 没有变化，已排除；试过改选择器 → 结果一样，已排除。\n卡点：我怀疑是标签栈没配对好，但不确定。\n最小复现：\n```python\nprint(1)\n```\n我的候选改法：显式标签栈。\n想请教：这个方案行不行？",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "已尝试",
+        "已排除",
+        "具体卡点",
+        "证据/数字",
+        "最小复现",
+        "明确诉求",
+        "候选答案"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "文中出现『没有变化』『行不行』『一样』——都必须**不**被误判成负面信号。这是历史上最贵的一条教训的回归测试。",
+      "expect_ready_to_send": true
+    },
+    {
+      "id": "G10",
+      "title": "好分享帖（工具发布）",
+      "input": "【分享一个我自己做的工具】提问医生\n\n有没有过这种经历：在群里问了问题，结果没人回。\n我把自己这学期问过的问题翻了一遍，发现多数时候不是群里没人，\n而是那条消息里没有别人能用的信息。\n\n所以我做了个工具，用法三步：\n① 把准备发到群里的那段话粘进去\n② 看报告——缺哪个要素、这条在手机上占几屏、具体怎么补\n③ 按前两条改完再跑一遍，70 分以上就可以发\n\n免登录、不用装东西，核心功能不联网：\nhttps://question-doctor.app.workbuddy.host/\n\n一个边界：它只判断「信息够不够别人开始帮你」，不判断你该不该问。\n紧急的事别先跑它，直接去群里喊人。\n\n同一件事换个说法，分数能从 0 到 100。欢迎试用、吐槽、拍砖。",
+      "expect_type": "share",
+      "expect_present": [
+        "上下文",
+        "证据/数字",
+        "可执行结论",
+        "适用边界",
+        "可复用形式"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "五要素齐全的分享帖基准线。注意它的『证据/数字』靠『70 分』这类具体阈值满足，而不是靠贴日志。（本用例用的是**实际要发出去的那版原文**——用例应当测真实产物，不是复述。）",
+      "expect_ready_to_send": true
+    },
+    {
+      "id": "G11",
+      "title": "只有链接的『分享』",
+      "input": "分享一个我自己做的工具，很好用。\nhttps://example.com",
+      "expect_type": "share",
+      "expect_present": [
+        "可复用形式"
+      ],
+      "expect_negative": [],
+      "expect_pass": false,
+      "rationale": "链接本身是可被拿走用的东西，所以『可复用形式』应当算存在；但『很好用』不是证据，也没有结论和边界。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G12",
+      "title": "显式声明类型应当压过启发式",
+      "input": "<!-- type: share -->\n我整理了一份提问前的检查清单，分享给大家。\n背景：这是我做课程项目时总结的。\n实测：按它改完，提问的回复率从 2/10 提到 6/10。\n用法：发之前逐条打勾。\n边界：不适用于正式邮件。\n可以直接复制：\n```\n□ 环境写了吗\n□ 试过什么、结果如何，写了吗\n```",
+      "expect_type": "share",
+      "expect_present": [
+        "上下文",
+        "证据/数字",
+        "可执行结论",
+        "适用边界",
+        "可复用形式"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "正文里出现了『分享』也会命中 share，但真正的考点是：**显式元数据必须优先于关键词启发式**。另一层用意是防止『出现请教的词就被判成提问类』。",
+      "expect_ready_to_send": true
+    },
+    {
+      "id": "G13",
+      "title": "超长单段（媒介适配应当报警）",
+      "input": "背景：我在做课程项目，用 Windows 11 和 Python 3.13，目标是把 31 篇讲义抓下来转成 Markdown。\n现象：跑出来不对，13/31 篇正常，18 篇是 0 字符。\n已尝试：试过换编码，没有变化；试过改选择器，结果一样。\n卡点：我怀疑是标签栈没配对好，但不确定。\n我的候选改法：把计数器换成显式标签栈。\n想请教：有没有更稳的判据。\n另外补充一下我已经排查过的方向：第一，我怀疑是文件编码不统一导致的，因为有几个页面是从不同镜像抓下来的，但我把每个文件的编码都打出来看过，全是 UTF-8；第二，我怀疑是请求头里少了 Accept-Language，加上之后结果没有变化；第三，我怀疑是并发抓取把连接池打满了，改成串行之后仍然是同样的篇数出错；第四，我怀疑是缓存问题，清了缓存重跑了一遍，还是老样子；第五，我怀疑是那几篇页面的 DOM 结构和别的页面不一样，于是我把其中一篇的完整 HTML 存下来单独跑，依然是 0 字符。\n第六，我怀疑是抓取的时候没有跟随重定向，于是加了 allow_redirects 并打印了最终 URL，发现那几篇确实跳转过，但跳转后的页面抓下来内容是正常的；第七，我怀疑是响应体被压缩了但没解压，于是手动看了 Content-Encoding，是 gzip，而且我用的库默认会解压；第八，我怀疑是那几篇页面的正文被包在 iframe 里，于是我去看了源码，正文是直出在 HTML 里的，不存在 iframe；第九，我怀疑是我的自定义 User-Agent 被识别成爬虫，换成浏览器的 UA 之后依然返回同样的结果；第十，我怀疑是提取器在遇到某些自闭合标签时会把后面的内容整段丢掉，于是我在每个关键节点都打了日志，日志显示丢弃态的计数一旦涨上去就再也没有回落，这才是目前最像根因的一条线索，但我还没想清楚该怎么在流式解析里安全地回退状态。\n我都已经排查到这个程度了，但还是没找到确切原因。如果大家觉得我上面列的十条里有哪一条方向就是错的，也请直接指出来，我可以把完整的抓取脚本和那几篇出问题的原始 HTML 一起发出来，方便的话也可以直接把文件给你，你那边跑一遍看看是不是复现得出来。",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "已尝试",
+        "具体卡点",
+        "证据/数字",
+        "明确诉求",
+        "候选答案"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "expect_medium_level": "bad",
+      "rationale": "要素基本齐（缺『已排除』『最小复现』），但正文被堆成 800 字以上的一大坨。本条验的是**媒介适配这条独立结论**，以及**「要素过关」不等于「现在就能发」**——八要素齐的 4 屏长文，在群里同样没人读完。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G14",
+      "title": "只有一个代码块",
+      "input": "```python\nprint(\"hello\")\n```",
+      "expect_type": null,
+      "expect_present": [
+        "可复用形式"
+      ],
+      "expect_negative": [],
+      "expect_pass": false,
+      "rationale": "一个裸代码块是『可被拿走用的东西』，但它**不是证据**——没有任何前后文说明它能证明什么。这条用来暴露『代码块被同时算进证据/数字』的潜在误报。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G15",
+      "title": "中英混合提问",
+      "input": "背景：Python 3.13 on Windows 11，我在写一个 HTML extractor，目标是把课程页面转成 Markdown。\n现象：18/31 篇 return 0 chars。\n已尝试：试过换 encoding → 无异常，已排除。\n卡点：我怀疑是 tag stack 没配好。\n最小复现：\n```python\npass\n```\n我的候选改法：用 explicit stack。\n想请教：有没有更稳的写法？",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "已尝试",
+        "已排除",
+        "具体卡点",
+        "证据/数字",
+        "最小复现",
+        "明确诉求",
+        "候选答案"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "技术人真实写法就是中英混的。规则若只认中文关键词，就会误伤这一大类。",
+      "expect_ready_to_send": true
+    },
+    {
+      "id": "G16",
+      "title": "回馈群结论",
+      "input": "<!-- type: feedback -->\n汇总一下上周那次讨论的结论。\n背景：起因是有人问『发帖没人回』。\n证据：我们统计了 12 条提问，其中 7 条没有任何回复。\n结论：三条规则——\n① 写清环境与目标\n② 写清试过什么、结果如何\n③ 写清卡在哪个环节\n这套清单只在技术学习群里验证过，正式邮件不适用。\n可以直接复制这段到备忘录。",
+      "expect_type": "feedback",
+      "expect_present": [
+        "上下文",
+        "证据/数字",
+        "可执行结论",
+        "适用边界",
+        "可复用形式"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "回馈类的五要素基准线；权重分布与 share 不同（可执行结论占 30）。",
+      "expect_ready_to_send": true
+    },
+    {
+      "id": "G17",
+      "title": "伪装的『已尝试』：只有动词，没有内容",
+      "input": "背景：我在做 X，目标是 Y。\n我试过了，不行。\n卡在 Z。\n想请教怎么办。",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "具体卡点",
+        "明确诉求"
+      ],
+      "expect_negative": [],
+      "expect_pass": false,
+      "rationale": "『我试过了』没有提供任何可用的信息（既没说试了什么，也没说结果）。期望判缺失——这是关键词规则**做不到**的语义判断，故意留在这里作为已知漏报。",
+      "expect_ready_to_send": false
+    },
+    {
+      "id": "G18",
+      "title": "英文提问",
+      "input": "Context: I am running Python 3.13 on Windows 11, building an HTML extractor that converts 31 course pages into Markdown.\nSymptom: 18/31 pages return 0 characters.\nTried: I tried switching encoding -> no change, ruled out; I tried checking the selector -> the article tag does exist, ruled out.\nBlocker: I suspect the drop_depth counter never returns to 0.\nRepro:\n```python\nprint(1)\n```\nMy current workaround: use an explicit tag stack.\nQuestion: is there a more robust judgement for nested tags?",
+      "expect_type": "question",
+      "expect_present": [
+        "上下文",
+        "已尝试",
+        "已排除",
+        "具体卡点",
+        "证据/数字",
+        "最小复现",
+        "明确诉求",
+        "候选答案"
+      ],
+      "expect_negative": [],
+      "expect_pass": true,
+      "rationale": "英文场景。规则表目前是中文关键词驱动的，这条**预期会大面积漏判**——故意保留，用来量化『换语言会掉多少』，而不是假装支持。"
+    }
+  ]
+}

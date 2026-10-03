@@ -39,6 +39,12 @@ jobs:
       - name: 运行全部测试（含跨语言对拍）
         run: python -m unittest discover -s tests -v
 
+      # 黄金测试集：量化误报率/漏报率，并与已记录的基线对比。
+      # 已知缺口不报红，新出现的判定错误必须报红 ——
+      # 一跑就红的灯会被习惯性忽略，那这个检查等于没有。
+      - name: 黄金测试集（误报率 / 漏报率 / 类型准确率）
+        run: python scripts/run_benchmark.py --all
+
       - name: 冒烟测试 —— 反面例子必须失败
         run: |
           if python scripts/question_doctor.py --quiet examples/01-bad-question.md; then
@@ -58,6 +64,9 @@ jobs:
           d = json.load(open('/tmp/out.json', encoding='utf-8'))
           assert d['tool'] == 'question-doctor', d
           assert isinstance(d['score'], (int, float)), d
+          # 要素维度通过 + 媒介适配可接受，才算"现在就能发"
           assert d['passed'] is True, d
-          print('JSON 输出结构正常，score =', d['score'])
+          assert d['ready_to_send'] is True, d
+          print('JSON 输出结构正常，score =', d['score'],
+                '| ready_to_send =', d['ready_to_send'])
           PY

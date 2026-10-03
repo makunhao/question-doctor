@@ -223,6 +223,12 @@ def diagnose(text: str, rules: dict, forced_type: str | None = None) -> dict:
 
     medium = check_medium(text, rules)
 
+    # 「要素维度通过」与「现在就能发出去」是**两件事**，这里分开表达：
+    # 一条八要素齐全、但占 4 屏的稿子，要素维度是满分，可它在群里大概率没人读完。
+    # 只报一个布尔值会让用户看到「可以发」四个字，然后把 4 屏发出去。
+    passed = (not hard_missing) and score >= 70
+    ready_to_send = passed and medium["level"] != "bad"
+
     return {
         "tool": "question-doctor",
         "version": __version__,
@@ -241,7 +247,8 @@ def diagnose(text: str, rules: dict, forced_type: str | None = None) -> dict:
         "negatives": negatives,
         "penalty": penalty,
         "medium": medium,
-        "passed": (not hard_missing) and score >= 70,
+        "passed": passed,
+        "ready_to_send": ready_to_send,
     }
 
 
@@ -313,7 +320,14 @@ def render(result: dict, rules: dict) -> str:
     a("**填不满的地方，就是对方会反问你的地方。**")
     a("")
 
-    verdict = "✅ 可以发" if result["passed"] else "⚠️ 建议先按上面改一轮再发"
+    # 结论要分开讲：要素过关 ≠ 现在就该按原样发出去
+    if result["ready_to_send"]:
+        verdict = "✅ 可以发"
+    elif result["passed"] and m["level"] == "bad":
+        verdict = (f"⚠️ **要素过关，但先别按原样发**——这条 {m['chars']} 字 ≈ {m['screens']} 屏，"
+                   f"群里大概率没人读完。先把「已尝试/已排除」压成几行、代码挪到附件，再发。")
+    else:
+        verdict = "⚠️ 建议先按上面改一轮再发"
     a(f"---\n\n**结论：{verdict}**")
     return "\n".join(L)
 

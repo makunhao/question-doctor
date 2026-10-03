@@ -6,7 +6,8 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg">
   <img alt="python" src="https://img.shields.io/badge/python-%E2%89%A53.9-brightgreen.svg">
   <img alt="dependencies" src="https://img.shields.io/badge/dependencies-0-brightgreen.svg">
-  <img alt="tests" src="https://img.shields.io/badge/tests-24%20passing-brightgreen.svg">
+  <img alt="tests" src="https://img.shields.io/badge/tests-25%20passing-brightgreen.svg">
+  <img alt="benchmark" src="https://img.shields.io/badge/golden%20set-18%20cases-blue.svg">
   <img alt="web" src="https://img.shields.io/badge/web-%E5%9C%A8%E7%BA%BF%E5%8F%AF%E7%94%A8-orange.svg">
 </p>
 
@@ -153,6 +154,11 @@ question-doctor/
 │   ├── test_question_doctor.py 22 个单元测试（含反例）
 │   ├── test_parity.py          一致性对拍：Python 与 JS 必须给出同一个分数
 │   └── engine_cli.js           Node 侧的对拍入口
+├── benchmark/                  ⭐ 黄金测试集：量化误报率/漏报率
+│   ├── golden_set.json         18 条人工标注用例（120 个要素单元格）
+│   ├── known_gaps.json         8 处修不掉的缺口 + 为什么修不掉
+│   ├── baseline.json           当前水平（CI 只对"变差"报红）
+│   └── README.md               口径定义 + 这个测试不能证明什么
 └── .github/
     ├── workflows/ci.yml
     ├── ISSUE_TEMPLATE/
@@ -165,9 +171,8 @@ question-doctor/
 
 - **语言**：Python 3.9+（零第三方依赖）／ 浏览器原生 ES2020（无构建步骤）
 - **规则**：`references/rules.json` —— 单一事实来源，CLI 与 Web 共用
-- **测试**：`unittest`（Python 标准库）+ Node 对拍
-- **AI 集成**：网页版的可选「语义增强」层。默认走免密钥通道；
-  未接通时可填自己的 OpenAI 兼容 Key（只存在浏览器 localStorage，不上传）
+- **测试**：`unittest`（Python 标准库）+ Node 对拍 + 黄金测试集
+- **AI 集成**：网页版的「语义增强」层（免密钥通道已接通，访客无需自带 Key）
 - **部署**：任意静态托管（本项目线上版为单页静态站点）
 
 ---
@@ -175,18 +180,38 @@ question-doctor/
 ## 测试
 
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -v   # 25 个单元测试 + 跨语言对拍
+python scripts/run_benchmark.py --all     # 黄金测试集：误报率 / 漏报率 / 准确率
 ```
 
-24 个测试，其中两个值得单独说：
+三类测试各自守不同的东西，缺一不可：
 
-- **`test_no_false_positive_on_real_content`** —— 反例：正文里出现「没有」「不行」
-  **不能**被判成灌水。早期版本用 `"无" in cell` 判断「无回应」，
-  把「你是不是**没有**在群里发」这条**真实回复**判成了「没人回」。
-  **一个子串包含毁掉了一条证据**——现在这条被测试钉住了。
-- **`test_parity.py`** —— Python 引擎与 JS 引擎必须对同一输入给出**同一个分数**。
-  两套实现口径一旦漂移，用户会看到「网页说 90 分、命令行说 60 分」——那比没有工具更糟。
-  这个测试上线当天就抓到了一个真实 bug：emoji 在 JS 里按 UTF-16 被算成 2 个字符。
+- **单元测试**（25 个）验证的是「**代码有没有按我设想的方式跑**」。
+  其中 `test_no_false_positive_on_real_content` 守的是最贵的一条教训：
+  早期用 `"无" in cell` 判断「无回应」，把「你是不是**没有**在群里发」
+  这条**真实回复**判成了「没人回」。**一个子串包含，毁掉了一条证据。**
+
+- **跨语言对拍**（`test_parity.py`）验证的是「**两套实现口径是否一致**」。
+  项目有 Python 和 JS 两套实现，代码分别写的；一旦漂移，用户会看到
+  「网页说 90 分、命令行说 60 分」——那比没有这个工具更糟。
+  它上线当天就抓到一个真实 bug：`'🙂'.length` 在 JS 里是 2（代理对），Python 按码点算 1。
+
+- **黄金测试集**（`benchmark/`）验证的是「**判定本身准不准**」。
+  这一层单元测试完全覆盖不到——**一个 bug 可以让 25 个单元测试全绿，同时让误报率翻倍。**
+  18 条人工标注用例、120 个要素判定单元格，量化出：
+
+  | 指标 | 当前 |
+  |---|---|
+  | 类型判定准确率 | **100.0%** |
+  | 要素·**误报率** | **4.17%**（5/120） |
+  | 要素·漏报率 | **1.67%**（2/120） |
+  | 负面信号（灌水/纯表情/无效开场…）错误数 | **0** |
+
+  ⚠️ **一个必须说清的局限**：黄金集的标注是**我本人做的**。
+  所以这个 4.17% 只能读成「**在我认定的标准下**，引擎有 4.17% 的判定与我的预期不符」，
+  **不能**读成客观误报率——它证明"规则实现没跑偏"，但不证明"这套判据本身合理"。
+  要解决这一点需要非本人标注的独立样本集，**当前没有，我也不假装有**。
+  详见 [`benchmark/README.md`](./benchmark/README.md)。
 
 ---
 
@@ -200,7 +225,7 @@ python -m unittest discover -s tests -v
   "weight": 16,
   "note": "把问题收窄到「卡在哪个环节」",
   "patterns": ["卡在", "根因", "我怀疑"],
-  "confirm": ["结果", "报错", "无效"]   // 可选：还要求同时出现这些词，否则只给一半分
+  "confirm": ["报错", "无效", "无异常", "→"]   // 可选：还要求同时出现这些词，否则只给一半分
 }
 ```
 

@@ -64,9 +64,17 @@
     g.textContent = `${r.grade} 级 · ${r.typeLabel}`;
     g.className = 'grade g-' + r.grade;
 
-    $('verdict').textContent = r.passed
-      ? '✅ 可以发——要素到位，信息足够别人开始帮你。'
-      : '⚠️ 建议先按下面改一轮再发。';
+    // 「要素过关」和「现在就能发出去」是两件事，页面上要分开说，
+    // 否则一条 4 屏长的稿子会拿到一句「可以发」。
+    if (r.readyToSend) {
+      $('verdict').textContent = '✅ 可以发——要素到位，信息足够别人开始帮你。';
+    } else if (r.passed && r.medium.level === 'bad') {
+      $('verdict').textContent =
+        `⚠️ 要素过关，但先别按原样发——这条 ${r.medium.chars} 字 ≈ ${r.medium.screens} 屏，` +
+        '群里大概率没人读完。先拆短再发。';
+    } else {
+      $('verdict').textContent = '⚠️ 建议先按下面改一轮再发。';
+    }
 
     $('type-reason').textContent = '类型判定依据：' + r.typeReason;
 
